@@ -9,70 +9,19 @@ if ($thread_id < 1) {
 }
 $user_id = $_SESSION['user_id'] ?? null;
 
-$query = $db->prepare("
-    SELECT t.*, u.username AS author_name, c.name AS category_name
-    FROM forum_threads t
-    JOIN forum_users u ON t.author_id = u.user_id
-    JOIN forum_categories c ON t.category_id = c.category_id
-    WHERE t.thread_id = ?
-");
-$query->execute([$thread_id]);
-$thread = $query->fetch(PDO::FETCH_ASSOC);
+$thread = fetchThreadById($thread_id);
 if (!$thread) {
 	render_error("Thread not found", 404);
 }
 
-$query_posts = $db->prepare("
-    SELECT 
-        p.*, 
-        u.username AS author_name
-    FROM forum_posts p
-    LEFT JOIN forum_users u ON p.author_id = u.user_id
-    WHERE p.thread_id = :thread_id
-    ORDER BY p.updated ASC
-");
-
-$query_posts->execute([
-	'thread_id' => $thread_id
-]);
-$posts = $query_posts->fetchAll(PDO::FETCH_ASSOC);
+$posts = fetchPostsByThread($thread_id);
 
 $post_ids = array_column($posts, 'post_id');
-if (!empty($post_ids)) {
-	$placeholders = implode(',', array_fill(0, count($post_ids), '?'));
-	$query_votes = $db->prepare("
-		SELECT post_id, SUM(vote_type) AS votes
-		FROM forum_posts_votes
-		WHERE post_id IN ($placeholders)
-		GROUP BY post_id
-	");
-	$query_votes->execute($post_ids);
-	$votes = $query_votes->fetchAll(PDO::FETCH_KEY_PAIR);
+$votes_data = fetchPostVotes($post_ids, $user_id);
+$images = fetchPostImages($post_ids);
 
-	if(isset($_SESSION['user_id'])) {
-		$query_user_votes = $db->prepare("
-			SELECT post_id, vote_type
-			FROM forum_posts_votes
-			WHERE post_id IN ($placeholders) AND author_id = ?
-		");
-		$user_vote_params = array_merge($post_ids, [$_SESSION['user_id']]);
-		$query_user_votes->execute($user_vote_params);
-		$user_votes = $query_user_votes->fetchAll(PDO::FETCH_KEY_PAIR);
-	}
-
-	$query_images = $db->prepare("
-		SELECT post_id, GROUP_CONCAT(image_path) as images
-		FROM post_images
-		WHERE post_id IN ($placeholders)
-		GROUP BY post_id
-	");
-	$query_images->execute($post_ids);
-	$images = $query_images->fetchAll(PDO::FETCH_KEY_PAIR);
-}
-
-$votes = $votes ?? [];
-$user_votes = $user_votes ?? [];
-$images = $images ?? [];
+$votes = $votes_data['votes'] ?? [];
+$user_votes = $votes_data['user_votes'] ?? [];
 
 foreach ($posts as &$post) {
 	$post['votes'] = $votes[$post['post_id']] ?? 0;
@@ -152,22 +101,24 @@ $display_posts = array_merge($initial_post ? [$initial_post] : [], $other_posts)
 				<?php if (isset($_SESSION['user_id'])): ?>
 					<?php if (!$thread['is_closed'] || $_SESSION['admin']): ?>
                                 <form method="post" action="actions/post/vote.php" style="margin-bottom: 0.5rem;">
-							<input type="hidden" name="post_id" value="<?= $post['post_id'] ?>">
-							<input type="hidden" name="vote_type" value="1">
+                                    <input type="hidden" name="post_id" value="<?= $post['post_id'] ?>">
+                                    <input type="hidden" name="vote_type" value="1">
+                                    <input type="hidden" name="thread_id" value="<?= $thread_id ?>">
                                     <button type="submit" class="vote-btn<?= $upvoted ? ' active-up' : '' ?>">
                                         <i class="bi bi-chevron-up"></i>
-							</button>
-						</form>
+                                    </button>
+                                </form>
                                 <div class="vote-count" style="color: <?= $post['votes'] > 0 ? '#198754' : ($post['votes'] < 0 ? '#dc3545' : '#888') ?>;">
-							<?= $post['votes'] ?>
-						</div>
+                                    <?= $post['votes'] ?>
+                                </div>
                                 <form method="post" action="actions/post/vote.php" style="margin-top: 0.5rem;">
-							<input type="hidden" name="post_id" value="<?= $post['post_id'] ?>">
-							<input type="hidden" name="vote_type" value="-1">
+                                    <input type="hidden" name="post_id" value="<?= $post['post_id'] ?>">
+                                    <input type="hidden" name="vote_type" value="-1">
+                                    <input type="hidden" name="thread_id" value="<?= $thread_id ?>">
                                     <button type="submit" class="vote-btn<?= $downvoted ? ' active-down' : '' ?>">
                                         <i class="bi bi-chevron-down"></i>
-							</button>
-						</form>
+                                    </button>
+                                </form>
 					<?php else: ?>
                                 <div style="margin-bottom: 0.5rem;"><i class="bi bi-chevron-up"></i></div>
                                 <div class="vote-count" style="color: <?= $post['votes'] > 0 ? '#198754' : ($post['votes'] < 0 ? '#dc3545' : '#888') ?>;">

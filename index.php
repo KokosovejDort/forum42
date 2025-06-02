@@ -2,34 +2,13 @@
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
 
-$category_filter = isset($_GET['category']) && $_GET['category'] !== '' ? $_GET['category'] : null;
+$category_filter = isset($_GET['category']) && $_GET['category'] !== '' ? (int)$_GET['category'] : null;
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$items_per_page = 10; // Changed to 20 items per page
+$items_per_page = 10;
 
-if ($category_filter) {
-    $query = $db->prepare("SELECT t.*, u.username, c.name AS category_name
-                           FROM forum_threads t
-                           JOIN forum_users u ON t.author_id = u.user_id
-                           JOIN forum_categories c ON t.category_id = c.category_id
-                           WHERE t.category_id = ?
-                           ORDER BY t.created_at DESC");
-    $query->execute([$category_filter]);
-} 
-else {
-    $query = $db->query("SELECT t.*, u.username, c.name AS category_name
-                         FROM forum_threads t
-                         JOIN forum_users u ON t.author_id = u.user_id
-                         JOIN forum_categories c ON t.category_id = c.category_id
-                         ORDER BY t.created_at DESC");
-	$query->execute();
-}
-
-$all_threads = $query->fetchAll(PDO::FETCH_ASSOC);
-
-
+$all_threads = fetchThreadsByCategory($category_filter);
 $total_items = count($all_threads);
 $total_pages = ceil($total_items / $items_per_page);
-
 
 $start_index = ($current_page - 1) * $items_per_page;
 $threads = array_slice($all_threads, $start_index, $items_per_page);

@@ -15,16 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         render_error("Invalid thread ID or category ID.", 400);
     }
 
-    $query = $db->prepare("
-    SELECT t.thread_id, t.category_id 
-    FROM forum_threads t
-    JOIN forum_categories c ON c.category_id = ?
-    WHERE t.thread_id = ?
-    ");
-    $query->execute([$new_category_id, $thread_id]);
-    $thread = $query->fetch(PDO::FETCH_ASSOC);
+    $thread = fetchThreadById($thread_id);
+    $category = fetchCategoryById($new_category_id);
 
-    if (!$thread) {
+    if (!$thread || !$category) {
         render_error("Thread or category not found.", 404);
     }
 

@@ -13,25 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	if ($post_id < 1 || !in_array($vote_type, [1, -1], true)) {
 		render_error("Missing or invalid vote data.", 400);
 	}
-	$query = $db->prepare("
-    SELECT p.post_id, p.thread_id, t.is_closed
-    FROM forum_posts p
-    JOIN forum_threads t ON p.thread_id = t.thread_id
-    WHERE p.post_id = ?
-	");
-	$query->execute([$post_id]);
-	$post = $query->fetch(PDO::FETCH_ASSOC);
 
-	if (!$post) {
-		$_SESSION['error'] = "Post not found.";
-		header("Location: ../../thread.php?id=" . ($_POST['thread_id'] ?? ''));
-		exit();
+	$permissions = getPostPermissions($post_id, $_SESSION['user_id'], $_SESSION['admin'] ?? false);
+	if ($permissions['error']) {
+		render_error($permissions['error']['message'], $permissions['error']['code']);
 	}
 
-	if ($post['is_closed'] && !$_SESSION['admin']) {
-		$_SESSION['error'] = "Cannot vote on posts in closed threads.";
-		header("Location: ../../thread.php?id=" . $post['thread_id']);
-		exit();
+	if (!$permissions['can_vote']) {
+		render_error("You don't have permission to vote on this post.", 403);
 	}
 
 	$query = $db->prepare("SELECT * FROM forum_posts_votes WHERE post_id = ? AND author_id = ?");
@@ -63,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		]);
 	}
 
-	header("Location: ../../thread.php?id=" . $post['thread_id']);
+	header("Location: ../../thread.php?id=" . ($_POST['thread_id'] ?? ''));
 	exit();
 }
 else {

@@ -4,7 +4,7 @@ require_once __DIR__.'/../../include/db.php';
 require_once __DIR__.'/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-    render_error("You must be logged in to delete posts.", 403);
+    render_error("You must be logged in to delete posts.", 401);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,24 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         render_error("Invalid post ID or thread ID.", 400);
     }
 
-    $query = $db->prepare("
-        SELECT p.*, t.is_closed 
-        FROM forum_posts p
-        JOIN forum_threads t ON p.thread_id = t.thread_id
-        WHERE p.post_id = ?
-    ");
-    $query->execute([$post_id]);
-    $post = $query->fetch(PDO::FETCH_ASSOC);
-
-    if (!$post) {
-        render_error("Post not found.", 404);
+    $permissions = getPostPermissions($post_id, $_SESSION['user_id'], $_SESSION['admin'] ?? false);
+    if ($permissions['error']) {
+        render_error($permissions['error']['message'], $permissions['error']['code']);
     }
 
-    if ($post['is_closed'] && !$_SESSION['admin']) {
-        render_error("Cannot delete posts in closed threads.", 400);
-    }
-
-    if ($post['author_id'] != $_SESSION['user_id'] && !$_SESSION['admin']) {
+    if (!$permissions['can_delete']) {
         render_error("You don't have permission to delete this post.", 403);
     }
 

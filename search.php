@@ -11,32 +11,11 @@ $results = [];
 
 if ($search_type === 'threads') {
     if (!empty($search_query)) {
-        $sql = "
-            SELECT t.*, u.username AS author_name, c.name AS category_name,
-                   (SELECT COUNT(*) FROM forum_posts WHERE thread_id = t.thread_id) AS post_count
-            FROM forum_threads t
-            JOIN forum_users u ON t.author_id = u.user_id
-            JOIN forum_categories c ON t.category_id = c.category_id
-            WHERE t.title LIKE ?
-            ORDER BY t.created_at DESC";
-    
-        $query = $db->prepare($sql);
-        $query->execute(["%{$search_query}%"]);
-        $all_results = $query->fetchAll(PDO::FETCH_ASSOC);
+        $all_results = searchThreads($search_query);
     }
 } else {
-    $sql = "SELECT u.*, 
-                   (SELECT COUNT(*) FROM forum_threads WHERE author_id = u.user_id) AS thread_count,
-                   (SELECT COUNT(*) FROM forum_posts WHERE author_id = u.user_id) AS post_count
-            FROM forum_users u
-            WHERE u.username LIKE ?
-            ORDER BY u.username ASC";
-    
-    $query = $db->prepare($sql);
-    $query->execute(["%{$search_query}%"]);
-    $all_results = $query->fetchAll(PDO::FETCH_ASSOC);
+    $all_results = searchUsers($search_query);
 }
-
 
 $total_items = count($all_results);
 $total_pages = ceil($total_items / $items_per_page);

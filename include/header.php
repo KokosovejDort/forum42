@@ -50,8 +50,7 @@
         $search_query = isset($_GET['q']) ? htmlspecialchars($_GET['q']) : '';
         $search_type = isset($_GET['type']) ? $_GET['type'] : 'threads';
 
-        $cat_query = $db->query("SELECT category_id, name FROM forum_categories ORDER BY name");
-        $categories = $cat_query->fetchAll(PDO::FETCH_ASSOC);
+        $categories = fetchAllCategories();
         $selected_category = isset($_GET['category']) ? $_GET['category'] : '';
         ?>
         <form method="GET" action="/~dudt05/semestralka/search.php" class="search-form">

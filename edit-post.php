@@ -4,36 +4,34 @@ require_once __DIR__.'/include/header.php';
 require_once __DIR__.'/include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
+    render_error("You must be logged in to edit posts.", 401);
 }
 
 $post_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
 if ($post_id < 1) {
     render_error("Invalid post ID.", 400);
 }
 
-$post_id = (int)$_GET['id'];
+$permissions = getPostPermissions($post_id, $_SESSION['user_id'], $_SESSION['admin'] ?? false);
+if ($permissions['error']) {
+    render_error($permissions['error']['message'], $permissions['error']['code']);
+}
 
-$query = $db->prepare("
-    SELECT p.*, t.is_closed, t.thread_id
-    FROM forum_posts p
-    JOIN forum_threads t ON p.thread_id = t.thread_id
-    WHERE p.post_id = ?
-");
-$query->execute([$post_id]);
-$post = $query->fetch(PDO::FETCH_ASSOC);
+if (!$permissions['can_edit']) {
+    render_error("You don't have permission to edit this post.", 403);
+}
 
+$post = fetchPostById($post_id);
 if (!$post) {
-    render_error("Post not found", 404);
+    render_error("Post not found.", 404);
 }
 
-if ($post['author_id'] != $_SESSION['user_id'] && !$_SESSION['admin']) {
-    render_error("You don't have permission to edit this post", 403);
+$thread = fetchThreadById($post['thread_id']);
+if (!$thread) {
+    render_error("Thread not found.", 404);
 }
 
-if ($post['is_closed'] && !$_SESSION['admin']) {
+if ($post['is_closed'] && !($_SESSION['admin'] ?? false)) {
     $_SESSION['error'] = "Cannot edit posts in closed threads.";
     header("Location: thread.php?id=" . $post['thread_id']);
     exit();
