@@ -1,16 +1,17 @@
 <?php
 session_start();
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__.'/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-	die("You must be logged in to vote.");
+	render_error("You must be logged in to vote.", 401);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$post_id = isset($_POST['post_id']) ? (int)$_POST['post_id'] : 0;
 	$vote_type = isset($_POST['vote_type']) ? (int)$_POST['vote_type'] : 0;
 	if ($post_id < 1 || !in_array($vote_type, [1, -1], true)) {
-		die("Missing or invalid vote data.");
+		render_error("Missing or invalid vote data.", 400);
 	}
 	$query = $db->prepare("
     SELECT p.post_id, p.thread_id, t.is_closed
@@ -66,5 +67,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	exit();
 }
 else {
-	die("Invalid request method.");
+	render_error("Invalid request method.", 405);
 }

@@ -5,7 +5,7 @@ require_once __DIR__.'/include/header.php';
 $search_type = $_GET['type'] ?? 'threads';
 $search_query = $_GET['q'] ?? '';
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$items_per_page = 20;
+$items_per_page = 10;
 
 $results = [];
 
@@ -44,89 +44,102 @@ $start_index = ($current_page - 1) * $items_per_page;
 $results = array_slice($all_results, $start_index, $items_per_page);
 ?>
 
-<div class="container mt-4">
-    <?php if (empty($results)): ?>
-        <p>No results found.</p>
-    <?php else: ?>
-        <div class="list-group mb-4">
-            <?php if ($search_type === 'threads'): ?>
-                <?php foreach ($results as $thread): ?>
-                    <a href="thread.php?id=<?= $thread['thread_id'] ?>" class="list-group-item list-group-item-action py-3">
-                        <div class="d-flex w-100 justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1"><?= htmlspecialchars($thread['title']) ?></h5>
-                                <small class="text-muted">
-                                    Category: <?= htmlspecialchars($thread['category_name']) ?> |
-                                    Author: <?= htmlspecialchars($thread['author_name']) ?> |
-                                    Posts: <?= $thread['post_count'] ?>
-                                </small>
-                            </div>
-                            <small class="text-muted">
-                                <?= date('M d, Y', strtotime($thread['created_at'])) ?>
-                            </small>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
+<div class="page-container">
+    <div class="content-card">
+        <div class="content-card-header">
+            <h2>Search Results</h2>
+        </div>
+        <div class="content-card-body">
+            <?php if (empty($results)): ?>
+                <p class="text-center">No results found.</p>
             <?php else: ?>
-                <?php foreach ($results as $user): ?>
-                    <div class="list-group-item py-3">
-                        <div class="d-flex w-100 justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1"><?= htmlspecialchars($user['username']) ?></h5>
-                                <small class="text-muted">
-                                    Threads: <?= $user['thread_count'] ?> |
-                                    Posts: <?= $user['post_count'] ?>
-                                </small>
+                <div class="thread-list">
+                    <?php if ($search_type === 'threads'): ?>
+                        <?php foreach ($results as $thread): ?>
+                            <div class="thread-item">
+                                <div class="thread-main">
+                                    <a href="thread.php?id=<?= $thread['thread_id'] ?>" class="thread-title">
+                                        <?= htmlspecialchars($thread['title']) ?>
+                                    </a>
+                                    <?php if (!empty($thread['is_closed'])): ?>
+                                        <span class="status-badge status-badge-secondary">Closed</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="thread-meta thread-meta-gap">
+                                    <span class="thread-author">
+                                        <i class="bi bi-person"></i> <?= htmlspecialchars($thread['author_name']) ?>
+                                    </span>
+                                    <span class="thread-category">
+                                        <i class="bi bi-folder"></i> <?= htmlspecialchars($thread['category_name']) ?>
+                                    </span>
+                                    <span class="thread-date">
+                                        <i class="bi bi-calendar"></i> <?= date('M d, Y', strtotime($thread['created_at'])) ?>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <?php foreach ($results as $user): ?>
+                            <div class="thread-item">
+                                <div class="thread-main">
+                                    <span class="thread-title">
+                                        <i class="bi bi-person"></i> <?= htmlspecialchars($user['username']) ?>
+                                    </span>
+                                </div>
+                                <div class="thread-meta thread-meta-gap">
+                                    <span>
+                                        Threads: <?= $user['thread_count'] ?>
+                                    </span>
+                                    <span>
+                                        Posts: <?= $user['post_count'] ?>
+                                    </span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <?php if ($total_pages > 1): ?>
+                    <div class="pagination">
+                        <?php if ($current_page > 1): ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $current_page - 1])) ?>" class="pagination-link">
+                                <i class="bi bi-chevron-left"></i> Previous
+                            </a>
+                        <?php endif; ?>
+
+                        <?php
+                        $start_page = max(1, $current_page - 2);
+                        $end_page = min($total_pages, $current_page + 2);
+                        if ($start_page > 1): ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>" class="pagination-link">1</a>
+                            <?php if ($start_page > 2): ?>
+                                <span class="pagination-ellipsis">...</span>
+                            <?php endif;
+                        endif;
+                        for ($i = $start_page; $i <= $end_page; $i++): ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>"
+                               class="pagination-link <?= $i === $current_page ? 'active' : '' ?>">
+                                <?= $i ?>
+                            </a>
+                        <?php endfor;
+                        if ($end_page < $total_pages):
+                            if ($end_page < $total_pages - 1): ?>
+                                <span class="pagination-ellipsis">...</span>
+                            <?php endif; ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $total_pages])) ?>" class="pagination-link">
+                                <?= $total_pages ?>
+                            </a>
+                        <?php endif; ?>
+                        <?php if ($current_page < $total_pages): ?>
+                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $current_page + 1])) ?>" class="pagination-link">
+                                Next <i class="bi bi-chevron-right"></i>
+                            </a>
+                        <?php endif; ?>
                     </div>
-                <?php endforeach; ?>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
-
-        <?php if ($total_pages > 1): ?>
-            <nav aria-label="Page navigation" class="mb-4">
-                <ul class="pagination justify-content-center flex-wrap">
-                    <?php if ($current_page > 1): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $current_page - 1])) ?>">Previous</a>
-                        </li>
-                    <?php endif; ?>
-
-                    <?php
-                    $start_page = max(1, $current_page - 2);
-                    $end_page = min($total_pages, $current_page + 2);
-                    
-                    if ($start_page > 1) {
-                        echo '<li class="page-item"><a class="page-link" href="?' . http_build_query(array_merge($_GET, ['page' => 1])) . '">1</a></li>';
-                        if ($start_page > 2) {
-                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                        }
-                    }
-                    
-                    for ($i = $start_page; $i <= $end_page; $i++): ?>
-                        <li class="page-item <?= $i === $current_page ? 'active' : '' ?>">
-                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>"><?= $i ?></a>
-                        </li>
-                    <?php endfor;
-                    
-                    if ($end_page < $total_pages) {
-                        if ($end_page < $total_pages - 1) {
-                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                        }
-                        echo '<li class="page-item"><a class="page-link" href="?' . http_build_query(array_merge($_GET, ['page' => $total_pages])) . '">' . $total_pages . '</a></li>';
-                    }
-                    ?>
-
-                    <?php if ($current_page < $total_pages): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $current_page + 1])) ?>">Next</a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
-        <?php endif; ?>
-    <?php endif; ?>
+    </div>
 </div>
 
 <?php require_once __DIR__.'/include/footer.php'; ?>

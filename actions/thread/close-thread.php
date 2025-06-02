@@ -1,16 +1,17 @@
 <?php
 session_start();
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__.'/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-    die("You must be logged in to close a thread.");
+    render_error("You must be logged in to close a thread.", 403);
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $thread_id = isset($_POST['thread_id']) ? (int)$_POST['thread_id'] : 0;
 
     if ($thread_id < 1) {
-        die("Invalid thread ID.");
+        render_error("Invalid thread ID.", 400);
     }
 
     $query = $db->prepare("
@@ -22,11 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $thread = $query->fetch(PDO::FETCH_ASSOC);
 
     if (!$thread) {
-        die("Thread not found.");
+        render_error("Thread not found.", 404);
     }
 
     if ($thread['author_id'] != $_SESSION['user_id'] && !$_SESSION['admin']) {
-        die("You don't have permission to close this thread.");
+        render_error("You don't have permission to close this thread.", 403);
     }
 
     $query = $db->prepare("

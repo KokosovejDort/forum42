@@ -1,9 +1,10 @@
 <?php
 session_start();
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__ . '/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-	die("You must be logged in to reply.");
+	render_error("You must be logged in to reply.", 403);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -11,14 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$content = trim($_POST['content'] ?? '');
 
 	if ($thread_id < 1 || empty($content)) {
-		die("Missing thread or empty content.");
+		render_error("Missing thread or empty content.");
 	}
 
 	$query = $db->prepare("SELECT * FROM forum_threads WHERE thread_id = ?");
 	$query->execute([$thread_id]);
 	$thread = $query->fetch(PDO::FETCH_ASSOC);
 	if (!$thread || $thread['is_closed']) {
-		die("Thread not found or closed.");
+		render_error("Thread not found or closed.");
 	}
 	$query = $db->prepare("
         INSERT INTO forum_posts (content, updated, thread_id, author_id)
@@ -46,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
 				if (!in_array($file['type'], $allowed_types)) {
-                    die("Invalid file type. Only JPG, PNG, and GIF are allowed.");
+                    render_error("Invalid file type. Only JPG, PNG, and GIF are allowed.");
                 }
 
                 if ($file['size'] > $max_size) {
-                    die("File is too large. Maximum size is 5MB.");
+                    render_error("File is too large. Maximum size is 5MB.");
                 }
 
                 $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -64,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ");
                     $query->execute([$post_id, 'uploads/' . $filename]);
                 } else {
-                    die("Failed to upload image.");
+                    render_error("Failed to upload image.");
                 }
 			}
 		}
@@ -74,5 +75,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	exit();
 }
 else {
-	die("Invalid request method.");
+	render_error("Invalid request method.");
 }

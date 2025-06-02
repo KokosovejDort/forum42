@@ -162,35 +162,37 @@ body {
 }
 
 .top-bar {
+    padding-top: 0.5rem;
     width: 100%;
-    max-width: none;
     margin: 0 0 1.5rem 0;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
     background: #f8f9fa;
     border-radius: 0 0 8px 8px;
-    padding: 0.75rem 1rem;
 }
 
 .top-bar-inner {
-    width: 100%;
-    max-width: 1400px;
+    /* width: 100%; */
+    /* padding: 0 0.5rem; */
+    max-width: 100%;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1.5rem;
-    padding: 0 2rem;
+    box-sizing: border-box;
 }
 
 .main-nav {
+    flex-wrap: wrap;
     display: flex;
-    flex-wrap: nowrap;
     gap: 1.5rem;
+    min-width: 0;
 }
 
 .nav-link {
+    white-space: normal;
     font-size: 1rem;
-    white-space: nowrap;
     padding: 0 0.5rem;
 }
 
@@ -199,6 +201,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     margin: 0;
+    min-width: 0;
 }
 
 .form-group {
@@ -209,7 +212,7 @@ body {
     .top-bar {
         flex-direction: column;
         align-items: stretch;
-        max-width: 98vw;
+        /* max-width: 98vw; */
     }
     .main-nav {
         flex-wrap: wrap;
@@ -493,4 +496,4 @@ body {
     width: 130px;
     min-width: 110px;
     max-width: 180px;
-} 
+}

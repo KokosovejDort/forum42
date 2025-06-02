@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
+require_once __DIR__.'/include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -10,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 $post_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($post_id < 1) {
-    die("Invalid post ID.");
+    render_error("Invalid post ID.", 400);
 }
 
 $post_id = (int)$_GET['id'];
@@ -25,11 +26,11 @@ $query->execute([$post_id]);
 $post = $query->fetch(PDO::FETCH_ASSOC);
 
 if (!$post) {
-    die("Post not found");
+    render_error("Post not found", 404);
 }
 
 if ($post['author_id'] != $_SESSION['user_id'] && !$_SESSION['admin']) {
-    die("You don't have permission to edit this post");
+    render_error("You don't have permission to edit this post", 403);
 }
 
 if ($post['is_closed'] && !$_SESSION['admin']) {

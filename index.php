@@ -4,7 +4,7 @@ require_once __DIR__.'/include/header.php';
 
 $category_filter = isset($_GET['category']) && $_GET['category'] !== '' ? $_GET['category'] : null;
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$items_per_page = 20; // Changed to 20 items per page
+$items_per_page = 10; // Changed to 20 items per page
 
 if ($category_filter) {
     $query = $db->prepare("SELECT t.*, u.username, c.name AS category_name

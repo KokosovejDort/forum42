@@ -1,9 +1,10 @@
 <?php
 session_start();
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__.'/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['admin']) || !$_SESSION['admin']) {
-    die("Access denied.");
+    render_error("Access denied.", 403);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -11,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_category_id = isset($_POST['new_category_id']) ? (int)$_POST['new_category_id'] : 0;
 
     if ($thread_id < 1 || $new_category_id < 1) {
-        die("Invalid thread ID or category ID.");
+        render_error("Invalid thread ID or category ID.", 400);
     }
 
     $query = $db->prepare("
@@ -24,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $thread = $query->fetch(PDO::FETCH_ASSOC);
 
     if (!$thread) {
-        die("Thread or category not found.");
+        render_error("Thread or category not found.", 404);
     }
 
     if ($thread['category_id'] == $new_category_id) {

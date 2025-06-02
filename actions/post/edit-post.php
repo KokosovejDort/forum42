@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__ . '/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../../login.php');
@@ -17,11 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $force_save = isset($_POST['force_save']) && $_SESSION['admin'];
 
         if ($post_id < 1 || $thread_id < 1) {
-            die("Invalid post ID or thread ID.");
+            render_error("Invalid post ID or thread ID.");
         }
 
         if (empty($content)) {
-            die("Content cannot be empty.");
+            render_error("Content cannot be empty.");
         }
 
         $query = $db->prepare("
@@ -34,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $post = $query->fetch(PDO::FETCH_ASSOC);
 
         if (!$post) {
-            die("Post not found.");
+            render_error("Post not found.");
         }
 
         if (!$force_save && $post['updated'] !== $last_updated) {
@@ -44,14 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($post['is_closed'] && !$_SESSION['admin']) {
-            die("Cannot edit posts in closed threads.");
+            render_error("Cannot edit posts in closed threads.");
         }
 
         if ($post['author_id'] != $_SESSION['user_id'] && !$_SESSION['admin']) {
-            die("You don't have permission to edit this post.");
+            render_error("You don't have permission to edit this post.");
         }
-
-        error_log("Updating post ID: " . $post_id . " with content: " . $content);
 
         if ($force_save) {
             $query = $db->prepare("
@@ -70,8 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         if (!$result) {
-            error_log("Update failed: " . print_r($query->errorInfo(), true));
-            die("Failed to update post due to a database error.");
+            render_error("Failed to update post due to a database error.", 500);
         }
 
         if (!$force_save && $query->rowCount() === 0) {
@@ -117,11 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ];
 
                     if (!in_array($file['type'], $allowed_types)) {
-                        die("Invalid file type. Only JPG, PNG, and GIF are allowed.");
+                        render_error("Invalid file type. Only JPG, PNG, and GIF are allowed.");
                     }
 
                     if ($file['size'] > $max_size) {
-                        die("File is too large. Maximum size is 5MB.");
+                        render_error("File is too large. Maximum size is 5MB.");
                     }
 
                     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -135,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ");
                         $query->execute([$post_id, 'uploads/' . $filename]);
                     } else {
-                        die("Failed to upload image.");
+                        render_error("Failed to upload image.");
                     }
                 }
             }
@@ -145,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     } catch (PDOException $e) {
         error_log("Database error in edit-post action: " . $e->getMessage());
-        die("A database error occurred. Please try again later.");
+        render_error("A database error occurred. Please try again later.");
     }
 } else {
     header("Location: ../../index.php");

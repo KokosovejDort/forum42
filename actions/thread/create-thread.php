@@ -1,10 +1,8 @@
 <?php
 session_start();
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__ . '/../../include/error-handler.php';
 
-if (!isset($_SESSION['user_id'])) {
-    die("You must be logged in to create a thread.");
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
@@ -39,6 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $query->execute([$category_id]);
     if ($query->rowCount() === 0) {
         $_SESSION['thread_error'] = "Selected category does not exist";
+        header("Location: ../../create-thread.php");
+        exit;
+    }
+
+    $query = $db->prepare("SELECT thread_id FROM forum_threads WHERE title = ?");
+    $query->execute([$title]);
+    if ($query->rowCount() > 0) {
+        $_SESSION['thread_error'] = "A thread with this title already exists. Please choose a different title.";
         header("Location: ../../create-thread.php");
         exit;
     }
@@ -79,11 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 if (!in_array($file['type'], $allowed_types)) {
-                    die("Invalid file type. Only JPG, PNG, and GIF are allowed.");
+                    render_error("Invalid file type. Only JPG, PNG, and GIF are allowed.");
                 }
 
                 if ($file['size'] > $max_size) {
-                    die("File is too large. Maximum size is 5MB.");
+                    render_error("File is too large. Maximum size is 5MB.");
                 }
 
                 $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
@@ -97,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ");
                     $query->execute([$post_id, 'uploads/' . $filename]);
                 } else {
-                    die("Failed to upload image.");
+                    render_error("Failed to upload image.");
                 }
             }
         }

@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
+require_once __DIR__.'/include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
+    render_error("You must be logged in to create a thread.", 403);
 }
 
 $query = $db->query("SELECT category_id, name FROM forum_categories ORDER BY name");

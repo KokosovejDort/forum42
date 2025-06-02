@@ -1,9 +1,10 @@
 <?php
 session_start();
 require_once __DIR__.'/../../include/db.php';
+require_once __DIR__.'/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['admin']) || !$_SESSION['admin']) {
-    die("Access denied.");
+    render_error("Access denied.", 403);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -11,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     
     if ($category_id < 1 || empty($name)) {
-        die("Invalid input.");
+        render_error("Invalid input.", 400);
     }
 
     $query = $db->prepare("UPDATE forum_categories SET name = ? WHERE category_id = ?");
