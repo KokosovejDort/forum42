@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 session_start();
 require_once __DIR__.'/../../include/db.php';
 require_once __DIR__.'/../../include/error-handler.php';
@@ -24,15 +25,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         render_error("You don't have permission to delete this post.", 403);
     }
 
+    $thread = fetchThreadById($thread_id);
+
     $query = $db->prepare("DELETE FROM forum_posts_votes WHERE post_id = ?");
     $query->execute([$post_id]);
 
     $query = $db->prepare("DELETE FROM forum_posts WHERE post_id = ?");
     $query->execute([$post_id]);
-    header("Location: ../../thread.php?id=" . $thread_id);
-    exit();
+
+    if ($thread && $thread['initial_post_id'] == $post_id) {
+        $query = $db->prepare("DELETE FROM forum_threads WHERE thread_id = ?");
+        $query->execute([$thread['thread_id']]);
+        header("Location: ../../index.php");
+        exit();
+    } else {
+        header("Location: ../../thread.php?id=" . $thread_id);
+        exit();
+    }
 }
 else {
-    header("Location: ../../index.php");
-    exit();
+    render_error("Method Not Allowed. This endpoint accepts POST only.", 405);
 }

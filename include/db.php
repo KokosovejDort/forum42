@@ -1,5 +1,9 @@
 <?php
-  $db = new PDO('mysql:host=127.0.0.1;dbname=dbname;charset=utf8', 'dbname', 'password');
+if (! defined('APP_INIT')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
+  $db = new PDO('mysql:host=127.0.0.1;dbname=dbname;charset=utf8', 'dbname', 'heslo');
 
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -8,7 +12,7 @@ function fetchThreadById(int $thread_id) {
     $stmt = $db->prepare("
         SELECT t.*, u.username AS author_name, c.name AS category_name
         FROM forum_threads t
-        JOIN forum_users u ON t.author_id = u.user_id
+        LEFT JOIN forum_users u ON t.author_id = u.user_id
         JOIN forum_categories c ON t.category_id = c.category_id
         WHERE t.thread_id = ?
     ");
@@ -22,7 +26,7 @@ function fetchThreadsByCategory(?int $category_id = null) {
         $stmt = $db->prepare("
             SELECT t.*, u.username, c.name AS category_name
             FROM forum_threads t
-            JOIN forum_users u ON t.author_id = u.user_id
+            LEFT JOIN forum_users u ON t.author_id = u.user_id
             JOIN forum_categories c ON t.category_id = c.category_id
             WHERE t.category_id = ?
             ORDER BY t.created_at DESC
@@ -32,7 +36,7 @@ function fetchThreadsByCategory(?int $category_id = null) {
         $stmt = $db->prepare("
             SELECT t.*, u.username, c.name AS category_name
             FROM forum_threads t
-            JOIN forum_users u ON t.author_id = u.user_id
+            LEFT JOIN forum_users u ON t.author_id = u.user_id
             JOIN forum_categories c ON t.category_id = c.category_id
             ORDER BY t.created_at DESC
         ");
@@ -313,7 +317,7 @@ function fetchAllThreadsForAdmin() {
     $stmt = $db->query("
         SELECT t.*, u.username AS author_name, c.name AS category_name 
         FROM forum_threads t
-        JOIN forum_users u ON t.author_id = u.user_id
+        LEFT JOIN forum_users u ON t.author_id = u.user_id
         JOIN forum_categories c ON t.category_id = c.category_id
         ORDER BY t.thread_id
     ");

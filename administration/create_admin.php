@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 require_once __DIR__.'/../include/db.php';
 
 $security_password = "2y$10srr7z7zSpwWtYfwBSAUd8ude5fP.Z7MC";

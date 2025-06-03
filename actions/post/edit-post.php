@@ -1,12 +1,12 @@
 <?php
+define('APP_INIT', true);
 session_start();
 
 require_once __DIR__.'/../../include/db.php';
 require_once __DIR__ . '/../../include/error-handler.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../../login.php');
-    exit;
+    render_error("You must be logged in to delete posts.", 401);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -146,6 +146,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         render_error("A database error occurred. Please try again later.");
     }
 } else {
-    header("Location: ../../index.php");
-    exit();
+    render_error("Method Not Allowed. This endpoint accepts POST only.", 405);
 }

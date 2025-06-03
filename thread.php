@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
 require_once __DIR__.'/include/error-handler.php';
@@ -80,7 +81,7 @@ $display_posts = array_merge($initial_post ? [$initial_post] : [], $other_posts)
         <div class="content-card-body">
             <div class="thread-meta thread-meta-gap" style="margin-bottom: 1.5rem;">
                 <span class="thread-author">
-                    <i class="bi bi-person"></i> <?= htmlspecialchars($thread['author_name']) ?>
+                    <i class="bi bi-person"></i> <?= htmlspecialchars($thread['author_name'] ?? '[Deleted User]') ?>
                 </span>
                 <span class="thread-category">
                     <i class="bi bi-folder"></i> <?= htmlspecialchars($thread['category_name']) ?>
@@ -135,6 +136,9 @@ $display_posts = array_merge($initial_post ? [$initial_post] : [], $other_posts)
 				<?php endif; ?>
 			</div>
                     <div class="post-content-col">
+				<div class="post-author">
+					Last updated by <strong><?= htmlspecialchars($post['author_name'] ?? '[Deleted User]') ?></strong> on <?= date('M j, Y H:i', strtotime($post['updated'])) ?>
+				</div>
 				<p><?= nl2br(htmlspecialchars($post['content'])) ?></p>
 				<?php if (!empty($post['images'])): ?>
                             <div style="margin-top: 0.5rem;">
@@ -145,10 +149,6 @@ $display_posts = array_merge($initial_post ? [$initial_post] : [], $other_posts)
 						<?php endforeach; ?>
 					</div>
 				<?php endif; ?>
-				<small>
-					Posted by <?= htmlspecialchars($post['author_name'] ?: "Deleted user") ?>,
-					Updated: <?= htmlspecialchars($post['updated']) ?>
-				</small>
 				<?php if (isset($_SESSION['user_id']) && ($post['author_id'] == $_SESSION['user_id'] || $_SESSION['admin']) && (!$thread['is_closed'] || $_SESSION['admin'])): ?>
                             <div class="button-row" style="margin-top: 1rem;">
                                 <a href="edit-post.php?id=<?= $post['post_id'] ?>" class="btn-action btn-outline-primary">

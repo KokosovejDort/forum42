@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 session_start();
 require_once __DIR__.'/../../include/db.php';
 
@@ -27,6 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($password) || strlen($password) < 6) {
         $_SESSION['register_error'] = "Password must be at least 6 characters";
+        header("Location: ../../register.php");
+        exit;
+    }
+
+    if (strlen($password) > 255) {
+        $_SESSION['register_error'] = "Password must be between 6 and 255 characters";
         header("Location: ../../register.php");
         exit;
     }

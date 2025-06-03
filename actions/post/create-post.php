@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 session_start();
 require_once __DIR__.'/../../include/db.php';
 require_once __DIR__ . '/../../include/error-handler.php';
@@ -75,5 +76,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	exit();
 }
 else {
-	render_error("Invalid request method.");
+	render_error("Method Not Allowed. This endpoint accepts POST only.", 405);
 }

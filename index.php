@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
 
@@ -36,7 +37,7 @@ $threads = array_slice($all_threads, $start_index, $items_per_page);
                             </div>
                             <div class="thread-meta thread-meta-gap">
                                 <span class="thread-author">
-                                    <i class="bi bi-person"></i> <?= htmlspecialchars($thread['username']) ?>
+                                    <i class="bi bi-person"></i> <?= htmlspecialchars($thread['username'] ?? '[Deleted User]') ?>
                                 </span>
                                 <span class="thread-category">
                                     <i class="bi bi-folder"></i> <?= htmlspecialchars($thread['category_name']) ?>

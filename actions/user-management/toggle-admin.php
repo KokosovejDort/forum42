@@ -1,9 +1,10 @@
 <?php
+define('APP_INIT', true);
 session_start();
 require_once __DIR__.'/../../include/db.php';
 require_once __DIR__.'/../../include/error-handler.php';
 
-if (!$_SESSION['admin']) {
+if (empty($_SESSION['admin']) || !$_SESSION['admin']) { 
     render_error("Access denied.", 403);
 }
 

@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 session_start();
 require_once __DIR__.'/../../include/db.php';
 require_once __DIR__.'/../../include/error-handler.php';
@@ -40,6 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header('Location: ../../thread.php?id='.$thread_id);
     exit;
 } else {
-    header("Location: ../../index.php");
+    header("Location: ../../admin.php");
     exit();
 }

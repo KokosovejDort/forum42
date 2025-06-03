@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
 require_once __DIR__.'/include/error-handler.php';

@@ -1,7 +1,24 @@
 <?php
+if (! defined('APP_INIT')) {
+    http_response_code(403);
+    exit('Forbidden');
+}
 
 function render_error(string $message, int $statusCode = 400) {
     http_response_code($statusCode);
+    $headerPath = __DIR__ . '/header.php'; 
+
+    $already = false;
+    foreach (get_included_files() as $file) {
+        if (realpath($file) === realpath($headerPath)) {
+            $already = true;
+            break;
+        }
+    }
+    if (!$already) {
+        include $headerPath;
+    }
+
     echo '<div class="page-container">';
     echo '<div class="content-card">';
     echo '<div class="content-card-header"><h2>Error: Status Code ' . $statusCode . '</h2></div>';

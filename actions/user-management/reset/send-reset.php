@@ -1,5 +1,7 @@
 <?php
-require_once '../../../include/db.php';
+define('APP_INIT', true);
+require_once __DIR__.'/../../../include/db.php';
+require_once __DIR__.'/../../../include/header.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
@@ -20,12 +22,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $reset_link = "https://eso.vse.cz/~dudt05/semestralka/actions/user-management/reset/reset-password.php?token=$token";
         $subject = "Password Reset Request";
         $body = "Click the following link to reset your password: $reset_link\nThis link expires in 30 minutes.";
-
         mail($email, $subject, $body);
-        
+
     }
+} else {
+    $error_message = "This page is for processing password reset requests and should not be accessed directly. Please use the Forgot Password form.";
 }
-require_once '../../../include/header.php';
 ?>
-    <p><?php echo $message; ?></p>
-<?php require_once '../../../include/footer.php'; ?>
+<div class="page-container">
+    <div class="content-card">
+        <div class="content-card-header">
+            <h2>Password Reset Request</h2>
+        </div>
+        <div class="content-card-body">
+            <?php if (isset($message)): ?>
+                <div class="status-badge success-badge">
+                    <?php echo htmlspecialchars($message); ?>
+                </div>
+            <?php elseif (isset($error_message)): ?>
+                 <div class="status-badge error-badge">
+                    <?php echo htmlspecialchars($error_message); ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+<?php require_once __DIR__.'/../../../include/footer.php'; ?>

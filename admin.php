@@ -1,4 +1,5 @@
 <?php
+define('APP_INIT', true);
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
 
@@ -13,6 +14,13 @@ $categories = fetchAllCategories();
 
 <div class="page-container">
     <h1>Admin Panel</h1>
+
+    <?php if (isset($_SESSION['category_error'])): ?>
+        <div class="status-badge error-badge" style="margin-bottom: 1rem;">
+            <?= htmlspecialchars($_SESSION['category_error']) ?>
+        </div>
+        <?php unset($_SESSION['category_error']); ?>
+    <?php endif; ?>
 
     <!-- Thread Management -->
     <div class="content-card">
@@ -43,7 +51,7 @@ $categories = fetchAllCategories();
                                 <?= htmlspecialchars($thread['title']) ?>
                             </a>
                         </td>
-                        <td><?= htmlspecialchars($thread['author_name']) ?></td>
+                        <td><?= htmlspecialchars($thread['author_name'] ?? '[Deleted User]') ?></td>
                         <td><?= htmlspecialchars($thread['category_name']) ?></td>
                         <td>
                             <span class="status-badge <?= $thread['is_closed'] ? 'status-badge-danger' : 'status-badge-success' ?>">

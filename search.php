@@ -1,18 +1,27 @@
 <?php
+define('APP_INIT', true);
 require_once __DIR__.'/include/db.php';
 require_once __DIR__.'/include/header.php';
+require_once __DIR__.'/include/error-handler.php';
 
-$search_type = $_GET['type'] ?? 'threads';
+$search_type = $_GET['type'] ?? '';
 $search_query = $_GET['q'] ?? '';
+
+if (empty($search_query) || empty($search_type)) {
+    render_error("Missing search query or type.", 400);
+}
+
+if (!in_array($search_type, ['threads', 'users'])) {
+     render_error("Invalid search type. Allowed types are 'threads' and 'users'.", 400);
+}
+
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $items_per_page = 10;
 
 $results = [];
 
 if ($search_type === 'threads') {
-    if (!empty($search_query)) {
-        $all_results = searchThreads($search_query);
-    }
+    $all_results = searchThreads($search_query);
 } else {
     $all_results = searchUsers($search_query);
 }
